@@ -36,8 +36,11 @@ public class ChatApplication {
 	}
 
 
-	//TODO: add exit button
-	//TODO: improve design
-	//TODO: deploy
+	// TODO: add ext button
+	// TODO: improve design
+	// TODO: deploy and add DB
+    // TODO: add encription
+    // TODO: Add private room
+    // TODO: file upload + emoji
 
 }
