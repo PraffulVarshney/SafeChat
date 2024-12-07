@@ -1,2 +1,22 @@
-.idea
+# Ignore IntelliJ IDEA project files
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Ignore Maven output
 SafeChat/target/
+*.class
+*.jar
+*.war
+*.ear
+dependency-reduced-pom.xml
+release.properties
+
+# OS-specific files
+.DS_Store
+.Thumbs.db
+ehthumbs.db
+
+# Logs
+*.log
