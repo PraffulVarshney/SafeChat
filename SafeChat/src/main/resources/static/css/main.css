@@ -285,3 +285,16 @@ button.accent {
         font-size: 1.1em;
     }
 }
+
+button.secondary {
+    background-color: #b33f3f;  /* Red color */
+    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.12);
+    color: #fff;  /* White text */
+
+}
+
+#exitForm {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+}
