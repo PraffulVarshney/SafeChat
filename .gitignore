@@ -20,3 +20,6 @@ ehthumbs.db
 
 # Logs
 *.log
+
+#Temp Files
+temp/
