@@ -42,8 +42,8 @@ public class ChatApplication {
 	@PostConstruct
 	public void initFirebase() {
 		try {
-			FileInputStream serviceAccount = new FileInputStream(
-					"C:/Users/raosa/Downloads/chat-box-c37b8-firebase-adminsdk-zgzko-e78b09753e.json");
+//			FileInputStream serviceAccount = new FileInputStream("C:/Users/raosa/Downloads/chat-box-c37b8-firebase-adminsdk-zgzko-e78b09753e.json");
+			FileInputStream serviceAccount = new FileInputStream("C:\\Users\\LENOVO\\Desktop\\STUDY\\F\\Projects\\SafeChat\\chat-box-c37b8-firebase-adminsdk-zgzko-e78b09753e.json");
 			FirebaseOptions options = FirebaseOptions.builder()
 					.setCredentials(GoogleCredentials.fromStream(serviceAccount))
 					.setDatabaseUrl("https://chat-box-c37b8-default-rtdb.firebaseio.com/")
@@ -55,9 +55,8 @@ public class ChatApplication {
 		}
 	}
 
-	// TODO: add ext button
+
 	// TODO: improve design
-	// TODO: deploy and add DB
 	// TODO: add encription
 	// TODO: Add private room
 	// TODO: file upload + emoji

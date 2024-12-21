@@ -30,29 +30,6 @@ public class FirebaseMessageService {
         return databaseReference;
     }
 
-    // public void fetchMessages(Consumer<List<ChatMessage>> callback) {
-    // databaseReference.addValueEventListener(new ValueEventListener() {
-    // @Override
-    // public void onDataChange(DataSnapshot dataSnapshot) {
-    // List<ChatMessage> chatMessages = new ArrayList<>();
-    // for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-    // ChatMessage chatMessage = snapshot.getValue(ChatMessage.class);
-    // chatMessages.add(chatMessage);
-    // }
-
-    // // Debug: Print the retrieved messages to the console
-    // System.out.println("Messages retrieved from Firebase: " + chatMessages);
-
-    // // Pass the data to the callback
-    // callback.accept(chatMessages);
-    // }
-
-    // @Override
-    // public void onCancelled(DatabaseError error) {
-    // System.err.println("Error fetching messages: " + error.getMessage());
-    // }
-    // });
-    // }
 
     public void fetchMessages(Consumer<List<ChatMessage>> callback) {
         // Get reference to the 'chats' node in the Firebase database
