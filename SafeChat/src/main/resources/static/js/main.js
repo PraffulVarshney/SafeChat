@@ -9,6 +9,8 @@ var messageArea = document.querySelector('#messageArea');
 var connectingElement = document.querySelector('.connecting');
 var messageExit = document.querySelector('#exit');
 
+var createRoomButton = document.querySelector('.create-room');
+
 var stompClient = null;
 var username = null;
 
@@ -201,10 +203,41 @@ function exitChat(event) {
     usernamePage.classList.remove('hidden'); // Show the username page
     chatPage.classList.add('hidden');       // Hide the chat page
 }
+
+function createRoom() {
+    var roomName = prompt("Enter the name of the room:");
+    if (roomName && roomName.trim() !== "") {
+        localStorage.setItem('room', roomName);
+        usernamePage.classList.add('hidden');
+        chatPage.classList.remove('hidden');
+
+        var socket = new SockJS('/ws');
+        stompClient = Stomp.over(socket);
+
+        stompClient.connect({}, function () {
+            onRoomConnected(roomName);
+        }, onError);
+    } else {
+        alert('Room name cannot be empty!');
+    }
+}
+
+function onRoomConnected(roomName) {
+    stompClient.subscribe(`/topic/${roomName}`, onMessageReceived);
+
+    stompClient.send(`/app/chat.addUserToRoom`,
+        {},
+        JSON.stringify({ sender: username, room: roomName, type: 'JOIN' })
+    );
+
+    connectingElement.classList.add('hidden');
+}
+
+
 usernameForm.addEventListener('submit', connect, true)
 messageForm.addEventListener('submit', sendMessage, true)
-messageExit.addEventListener('click', exitChat, true);
-
+messageExit.addEventListener('click', exitChat, true)
+createRoomButton.addEventListener('click', createRoom);
 
 window.onload = function () {
     const savedUsername = localStorage.getItem('username');

@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.safechat</groupId>
 	<artifactId>chat</artifactId>
-	<version>1.0.1java --version</version>
+	<version>1.0.1</version>
 	<name>Chat</name>
 	<description>Demo project for a Chat application using Spring Boot</description>
 	<properties>
