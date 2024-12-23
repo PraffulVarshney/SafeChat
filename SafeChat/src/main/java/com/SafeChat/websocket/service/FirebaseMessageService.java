@@ -6,55 +6,70 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.SafeChat.websocket.model.ChatMessage;
-import java.util.function.Consumer;
+import com.SafeChat.websocket.model.EncryptionUtil;
+import java.util.concurrent.CompletableFuture;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class FirebaseMessageService {
 
     private final DatabaseReference databaseReference;
+    @Autowired
+    private EncryptionUtil encryptionUtil;
 
     public FirebaseMessageService() {
         this.databaseReference = FirebaseDatabase.getInstance().getReference("chats");
     }
 
     public void saveMessage(ChatMessage chatMessage) {
-        databaseReference.push().setValueAsync(chatMessage);
+        ChatMessage dbMessage = new ChatMessage();
+
+        dbMessage.setSender(encryptionUtil.encrypt(chatMessage.getSender()));
+        dbMessage.setContent(encryptionUtil.encrypt(chatMessage.getContent())); // Encrypt only for Firebase
+        dbMessage.setTimestamp(chatMessage.getTimestamp());
+        dbMessage.setType(chatMessage.getType());
+        databaseReference.push().setValueAsync(dbMessage);
     }
 
     public DatabaseReference getDatabaseReference() {
         return databaseReference;
     }
 
-
-    public void fetchMessages(Consumer<List<ChatMessage>> callback) {
-        // Get reference to the 'chats' node in the Firebase database
+    public CompletableFuture<List<ChatMessage>> fetchMessages() {
+        CompletableFuture<List<ChatMessage>> future = new CompletableFuture<>();
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference("chats");
+        long currentTimestamp = System.currentTimeMillis();
+        long twentyFourHoursAgo = currentTimestamp - (24 * 60 * 60 * 1000);
 
-        // Query the last 10 messages ordered by timestamp
-        ref.orderByChild("timestamp") // Assuming the timestamp is the field to order by
-                .limitToLast(10) // Fetch only the last 10 messages
-                .addValueEventListener(new ValueEventListener() {
+        ref.orderByChild("timestamp")
+                .startAt(twentyFourHoursAgo)
+                // .limitToLast(1000000)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         List<ChatMessage> chatMessages = new ArrayList<>();
                         for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                             ChatMessage chatMessage = snapshot.getValue(ChatMessage.class);
-                            chatMessages.add(chatMessage);
+                            if (chatMessage != null) {
+                                chatMessage.setSender(encryptionUtil.decrypt(chatMessage.getSender()));
+                                chatMessage.setContent(encryptionUtil.decrypt(chatMessage.getContent()));
+                                chatMessages.add(chatMessage);
+                            }
                         }
-                        // Callback with the list of chat messages
-                        callback.accept(chatMessages);
+                        future.complete(chatMessages); // Completes the future with the result
                     }
 
                     @Override
                     public void onCancelled(DatabaseError error) {
-                        System.err.println("Error fetching messages: " + error.getMessage());
+                        future.completeExceptionally(error.toException()); // Handle errors
                     }
                 });
+        return future;
     }
 
 }

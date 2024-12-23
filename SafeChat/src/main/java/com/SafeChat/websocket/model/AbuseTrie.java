@@ -28,6 +28,9 @@ public class AbuseTrie {
         TrieNode node = root;
         for (char ch : word.toLowerCase().toCharArray()) {
             int index = ch - ' ';
+            if (node.isEndOfWord) {
+                return true;
+            }
             if (node.children[index] == null) {
                 return false;
             }
@@ -41,4 +44,3 @@ public class AbuseTrie {
         private boolean isEndOfWord;
     }
 }
-

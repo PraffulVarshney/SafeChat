@@ -23,3 +23,6 @@ ehthumbs.db
 
 #Temp Files
 temp/
+
+# Ignore application.properties
+SafeChat/src/main/resources/application.properties
