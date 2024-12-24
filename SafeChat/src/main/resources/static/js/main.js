@@ -18,7 +18,7 @@ var timestamp = new Date().getTime();
 var socket = new SockJS('/your-endpoint');
 var stompClient = Stomp.over(socket);
 stompClient.connect({}, function (frame) {
-    stompClient.debug = null; // Disable debug logs
+    // stompClient.debug = null; // Disable debug logs
     stompClient.subscribe('/topic/public', onMessageReceived);
 });
 
@@ -29,6 +29,12 @@ var colors = [
 
 function connect(event) {
     username = document.querySelector('#name').value.trim();
+
+    if(checkAbuseWord(username))
+    {
+        alert('Please choose another username.');
+        return;
+    }
 
     if(username) {
         localStorage.setItem('username', username);
@@ -222,8 +228,22 @@ window.onload = function () {
 
         var socket = new SockJS('/ws');
         stompClient = Stomp.over(socket);
-        stompClient.debug = null;
+        // stompClient.debug = null;
         stompClient.connect({}, onConnected, onError);
     }
 };
 
+async function checkAbuseWord(word) {
+    try {
+        const response = await fetch(`/api/abuse/search?word=${encodeURIComponent(word)}`);
+        if (response.ok) {
+            const isAbusive = await response.json();
+            console.log(`Is abusive: ${isAbusive}`);
+            return isAbusive;
+        } else {
+            console.error('Error checking word:', response.statusText);
+        }
+    } catch (error) {
+        console.error('Fetch error:', error);
+    }
+}
