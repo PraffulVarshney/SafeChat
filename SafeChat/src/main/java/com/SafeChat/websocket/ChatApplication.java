@@ -2,6 +2,11 @@ package com.SafeChat.websocket;
 
 import com.SafeChat.websocket.repository.AbuseTrieLoader;
 import com.SafeChat.websocket.service.AbuseTrieService;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.springframework.beans.factory.annotation.Value;
+
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
@@ -11,13 +16,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import java.io.FileInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.Map;
 
 @SpringBootApplication
 public class ChatApplication {
 	private final AbuseTrieLoader abuseTrieLoader;
 	private final AbuseTrieService abuseTrieService;
+
+	@Value("${firebase.database-url}")
+	private String firebaseDatabaseUrl;
+
+	@Value("${firebase.credentials-json}")
+	private String firebaseCredentialsJson;
 
 	@Autowired
 	public ChatApplication(AbuseTrieLoader abuseTrieLoader, AbuseTrieService abuseTrieService) {
@@ -42,11 +54,14 @@ public class ChatApplication {
 	@PostConstruct
 	public void initFirebase() {
 		try {
-//			FileInputStream serviceAccount = new FileInputStream("C:/Users/raosa/Downloads/chat-box-c37b8-firebase-adminsdk-zgzko-e78b09753e.json");
-			FileInputStream serviceAccount = new FileInputStream("C:\\Users\\LENOVO\\Desktop\\STUDY\\F\\Projects\\SafeChat\\chat-box-c37b8-firebase-adminsdk-zgzko-e78b09753e.json");
+			ObjectMapper objectMapper = new ObjectMapper();
+			Map<String, Object> credentialsMap = objectMapper.readValue(firebaseCredentialsJson,
+					new TypeReference<Map<String, Object>>() {
+					});
 			FirebaseOptions options = FirebaseOptions.builder()
-					.setCredentials(GoogleCredentials.fromStream(serviceAccount))
-					.setDatabaseUrl("https://chat-box-c37b8-default-rtdb.firebaseio.com/")
+					.setCredentials(GoogleCredentials
+							.fromStream(new ByteArrayInputStream(objectMapper.writeValueAsBytes(credentialsMap))))
+					.setDatabaseUrl(firebaseDatabaseUrl)
 					.build();
 			FirebaseApp.initializeApp(options);
 			System.out.println("Firebase initialized");
@@ -55,9 +70,7 @@ public class ChatApplication {
 		}
 	}
 
-
 	// TODO: improve design
-	// TODO: add encription
 	// TODO: Add private room
 	// TODO: file upload + emoji
 

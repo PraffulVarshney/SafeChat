@@ -6,13 +6,13 @@ import com.SafeChat.websocket.service.FirebaseMessageService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RestController;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,11 +39,15 @@ public class ChatController {
 
     @GetMapping("/chats")
     public List<ChatMessage> getChatMessages() {
-        List<ChatMessage> messages = new ArrayList<>();
-        firebaseMessageService.fetchMessages(messages::addAll);
-        System.out.println("Messages retrieved from Firebase: " + messages);
-
-        return messages;
+        CompletableFuture<List<ChatMessage>> future = firebaseMessageService.fetchMessages();
+        try {
+            List<ChatMessage> messages = future.get(); // Waits until the future is completed
+            System.out.println("Messages retrieved from Firebase: " + messages.size());
+            return messages;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
     }
 
     private void processChatMessage(ChatMessage chatMessage) {
@@ -69,7 +73,16 @@ public class ChatController {
     @SendTo("/topic/public")
     public ChatMessage addUser(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor) {
         // Add username in web socket session
+        firebaseMessageService.saveMessage(chatMessage); // Now using the new service
         headerAccessor.getSessionAttributes().put("username", chatMessage.getSender());
         return chatMessage;
     }
+
+    @MessageMapping("/chat.leaveUser")
+    @SendTo("/topic/public")
+    public ChatMessage leaveUser(@Payload ChatMessage chatMessage) {
+        firebaseMessageService.saveMessage(chatMessage);
+        return chatMessage;
+    }
+
 }

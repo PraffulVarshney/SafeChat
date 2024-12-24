@@ -9,8 +9,18 @@ var messageArea = document.querySelector('#messageArea');
 var connectingElement = document.querySelector('.connecting');
 var messageExit = document.querySelector('#exit');
 
+var createRoomButton = document.querySelector('.create-room');
+
 var stompClient = null;
 var username = null;
+var timestamp = new Date().getTime();
+
+var socket = new SockJS('/your-endpoint');
+var stompClient = Stomp.over(socket);
+stompClient.connect({}, function (frame) {
+    // stompClient.debug = null; // Disable debug logs
+    stompClient.subscribe('/topic/public', onMessageReceived);
+});
 
 var colors = [
     '#2196F3', '#32c787', '#00BCD4', '#ff5652',
@@ -20,6 +30,12 @@ var colors = [
 function connect(event) {
     username = document.querySelector('#name').value.trim();
 
+    if(checkAbuseWord(username))
+    {
+        alert('Please choose another username.');
+        return;
+    }
+
     if(username) {
         localStorage.setItem('username', username);
         usernamePage.classList.add('hidden');
@@ -27,7 +43,7 @@ function connect(event) {
 
         var socket = new SockJS('/ws');
         stompClient = Stomp.over(socket);
-
+        stompClient.debug = null;
         stompClient.connect({}, onConnected, onError);
     }
     else {
@@ -37,50 +53,18 @@ function connect(event) {
     event.preventDefault();
 }
 
-
-// function onConnected() {
-//     // Subscribe to the Public Topic
-//     stompClient.subscribe('/topic/public', onMessageReceived);
-
-//     // Tell your username to the server
-//     stompClient.send("/app/chat.addUser",
-//         {},
-//         JSON.stringify({sender: username, type: 'JOIN'})
-//     )
-
-//     connectingElement.classList.add('hidden');
-// }
-
 function onConnected() {
     // Fetch previous chat messages from the server
     fetch('/chats')
         .then(response => response.json())
         .then(messages => {
-            console.log("fetching megs", messages);
+            console.log("fetching megs", messages.length);
             // Loop through the previous messages and display them
             messages.forEach(message => {
-                var messageElement = document.createElement('li');
-                messageElement.classList.add('chat-message');
-
-                var avatarElement = document.createElement('i');
-                var avatarText = document.createTextNode(message.sender[0]);
-                avatarElement.appendChild(avatarText);
-                avatarElement.style['background-color'] = getAvatarColor(message.sender);
-
-                messageElement.appendChild(avatarElement);
-
-                var usernameElement = document.createElement('span');
-                var usernameText = document.createTextNode(message.sender);
-                usernameElement.appendChild(usernameText);
-                messageElement.appendChild(usernameElement);
-
-                var textElement = document.createElement('p');
-                var messageText = document.createTextNode(message.content);
-                textElement.appendChild(messageText);
-                messageElement.appendChild(textElement);
-
-                messageArea.appendChild(messageElement);
-                messageArea.scrollTop = messageArea.scrollHeight;
+                var payload = {
+                    body: JSON.stringify(message) // Convert the message object to a JSON string
+                };
+                onMessageReceived(payload)
             });
         })
         .catch(error => {
@@ -91,11 +75,13 @@ function onConnected() {
     stompClient.subscribe('/topic/public', onMessageReceived);
 
     // Tell your username to the server
-    stompClient.send("/app/chat.addUser",
-        {},
-        JSON.stringify({sender: username, type: 'JOIN'})
-    );
-
+    var chatMessage = {
+        sender: username,
+        content: `${username} joined!`,
+        type: 'JOIN',
+        timestamp : timestamp
+    };
+    stompClient.send("/app/chat.addUser", {}, JSON.stringify(chatMessage));
     connectingElement.classList.add('hidden');
 }
 
@@ -109,7 +95,7 @@ function onError(error) {
 function sendMessage(event) {
     var messageContent = messageInput.value.trim();
     if(messageContent && stompClient) {
-        var timestamp = new Date().getTime();
+        // var timestamp = new Date().getTime();
         var chatMessage = {
             sender: username,
             content: messageInput.value,
@@ -122,28 +108,9 @@ function sendMessage(event) {
     event.preventDefault();
 }
 
-// fetch("/chats")
-//     .then(response => response.json())
-//     .then(messages => {
-//         let chatContainer = document.getElementById("chat-container");
-//         chatContainer.innerHTML = '';  // Clear previous messages
-
-//         messages.forEach(message => {
-//             let messageElement = document.createElement("div");
-//             messageElement.classList.add("message");
-//             messageElement.innerHTML = `
-//                 <p><strong>${message.sender}</strong>: ${message.message}</p>
-//                 <p><em>${message.timestamp}</em></p>
-//             `;
-//             chatContainer.appendChild(messageElement);
-//         });
-//     })
-//     .catch(error => console.log("Error fetching messages:", error));
-
 
 function onMessageReceived(payload) {
     var message = JSON.parse(payload.body);
-
     var messageElement = document.createElement('li');
 
     if(message.type === 'JOIN') {
@@ -188,23 +155,69 @@ function getAvatarColor(messageSender) {
     return colors[index];
 }
 
-function exitChat(event) {
-    event.preventDefault();
-    // Disconnect from WebSocket if connected
-    if (stompClient) {
-        stompClient.disconnect(() => {
-            console.log('Disconnected from server');
-        });
+    function exitChat(event) {
+        event.preventDefault();
+        
+        var username = localStorage.getItem("username");
+        localStorage.removeItem('username'); // Clear the saved username
+        var chatMessage = {
+            sender: username,
+            content: `${username} left!`,
+            type: 'LEAVE',
+            timestamp : timestamp
+        };
+        stompClient.send("/app/chat.leaveUser", {}, JSON.stringify(chatMessage));
+        
+        // Disconnect from WebSocket if connected
+        if (stompClient) {
+            stompClient.disconnect(() => {
+                console.log('Disconnected from server');
+            });
+        }
+        // Clear chat messages from the chat page
+        var messageArea = document.getElementById("messageArea"); // Assuming the chat messages are inside an element with id "messageArea"
+        while (messageArea.firstChild) {
+            messageArea.removeChild(messageArea.firstChild);
+        }
+        
+        usernamePage.classList.remove('hidden'); // Show the username page
+        chatPage.classList.add('hidden');       // Hide the chat page
     }
-    localStorage.removeItem('username'); // Clear the saved username
-    // Reset the UI to the first page
-    usernamePage.classList.remove('hidden'); // Show the username page
-    chatPage.classList.add('hidden');       // Hide the chat page
+
+function createRoom() {
+    var roomName = prompt("Enter the name of the room:");
+    if (roomName && roomName.trim() !== "") {
+        localStorage.setItem('room', roomName);
+        usernamePage.classList.add('hidden');
+        chatPage.classList.remove('hidden');
+
+        var socket = new SockJS('/ws');
+        stompClient = Stomp.over(socket);
+
+        stompClient.connect({}, function () {
+            onRoomConnected(roomName);
+        }, onError);
+    } else {
+        alert('Room name cannot be empty!');
+    }
 }
+
+function onRoomConnected(roomName) {
+    stompClient.subscribe(`/topic/${roomName}`, onMessageReceived);
+
+    stompClient.send(`/app/chat.addUserToRoom`,
+        {},
+        JSON.stringify({ sender: username, room: roomName, type: 'JOIN' })
+    );
+
+    connectingElement.classList.add('hidden');
+}
+
+
 usernameForm.addEventListener('submit', connect, true)
 messageForm.addEventListener('submit', sendMessage, true)
-messageExit.addEventListener('click', exitChat, true);
-
+messageExit.addEventListener('click', exitChat, true)
+createRoomButton.addEventListener('click', createRoom);
 
 window.onload = function () {
     const savedUsername = localStorage.getItem('username');
@@ -215,8 +228,22 @@ window.onload = function () {
 
         var socket = new SockJS('/ws');
         stompClient = Stomp.over(socket);
-
+        // stompClient.debug = null;
         stompClient.connect({}, onConnected, onError);
     }
 };
 
+async function checkAbuseWord(word) {
+    try {
+        const response = await fetch(`/api/abuse/search?word=${encodeURIComponent(word)}`);
+        if (response.ok) {
+            const isAbusive = await response.json();
+            console.log(`Is abusive: ${isAbusive}`);
+            return isAbusive;
+        } else {
+            console.error('Error checking word:', response.statusText);
+        }
+    } catch (error) {
+        console.error('Fetch error:', error);
+    }
+}
