@@ -13,7 +13,6 @@ var createRoomButton = document.querySelector('.create-room');
 
 var stompClient = null;
 var username = null;
-var timestamp = new Date().getTime();
 
 var socket = new SockJS('/your-endpoint');
 var stompClient = Stomp.over(socket);
@@ -89,6 +88,7 @@ function onConnected() {
     stompClient.subscribe('/topic/public', onMessageReceived);
 
     // Tell your username to the server
+    var timestamp = new Date().getTime();
     var chatMessage = {
         sender: username,
         content: `${username} joined!`,
@@ -109,7 +109,7 @@ function onError(error) {
 function sendMessage(event) {
     var messageContent = messageInput.value.trim();
     if(messageContent && stompClient) {
-        // var timestamp = new Date().getTime();
+        var timestamp = new Date().getTime();
         var chatMessage = {
             sender: username,
             content: messageInput.value,
@@ -174,6 +174,7 @@ function getAvatarColor(messageSender) {
         
         var username = localStorage.getItem("username");
         localStorage.removeItem('username'); // Clear the saved username
+        var timestamp = new Date().getTime();
         var chatMessage = {
             sender: username,
             content: `${username} left!`,

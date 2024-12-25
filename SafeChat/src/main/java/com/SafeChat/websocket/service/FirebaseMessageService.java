@@ -29,7 +29,8 @@ public class FirebaseMessageService {
     public void saveMessage(ChatMessage chatMessage) {
         ChatMessage dbMessage = new ChatMessage();
 
-        dbMessage.setSender(encryptionUtil.encrypt(chatMessage.getSender()));
+        // dbMessage.setSender(encryptionUtil.encrypt(chatMessage.getSender()));
+        dbMessage.setSender(chatMessage.getSender());
         dbMessage.setContent(encryptionUtil.encrypt(chatMessage.getContent())); // Encrypt only for Firebase
         dbMessage.setTimestamp(chatMessage.getTimestamp());
         dbMessage.setType(chatMessage.getType());
@@ -46,9 +47,9 @@ public class FirebaseMessageService {
         long currentTimestamp = System.currentTimeMillis();
         long twentyFourHoursAgo = currentTimestamp - (24 * 60 * 60 * 1000);
 
-        ref.orderByChild("timestamp")
-                .startAt(twentyFourHoursAgo)
-                // .limitToLast(1000000)
+        ref.startAt(twentyFourHoursAgo)
+                .orderByChild("timestamp")
+                .limitToLast(1000)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
@@ -56,7 +57,8 @@ public class FirebaseMessageService {
                         for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                             ChatMessage chatMessage = snapshot.getValue(ChatMessage.class);
                             if (chatMessage != null) {
-                                chatMessage.setSender(encryptionUtil.decrypt(chatMessage.getSender()));
+                                // chatMessage.setSender(encryptionUtil.decrypt(chatMessage.getSender()));
+                                chatMessage.setSender(chatMessage.getSender());
                                 chatMessage.setContent(encryptionUtil.decrypt(chatMessage.getContent()));
                                 chatMessages.add(chatMessage);
                             }
