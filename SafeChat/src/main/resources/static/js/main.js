@@ -18,7 +18,7 @@ var timestamp = new Date().getTime();
 var socket = new SockJS('/your-endpoint');
 var stompClient = Stomp.over(socket);
 stompClient.connect({}, function (frame) {
-    // stompClient.debug = null; // Disable debug logs
+    stompClient.debug = null; // Disable debug logs
     stompClient.subscribe('/topic/public', onMessageReceived);
 });
 
@@ -27,29 +27,43 @@ var colors = [
     '#ffc107', '#ff85af', '#FF9800', '#39bbb0'
 ];
 
-function connect(event) {
-    username = document.querySelector('#name').value.trim();
+async function connect(event) {
+    username = document.querySelector('#name').value.trim();    const words = username.split(' ');
 
-    if(checkAbuseWord(username))
-    {
-        alert('Please choose another username.');
-        return;
+    // Check each word in the username for abuse
+    let isAbusive = false;
+    for (const word of words) {
+        checkAbuseWord(word).then(result => {
+            // If any word is abusive, set the flag and break
+            if (result) {
+                isAbusive = true;
+                alert('Please choose another username.');
+                return; // Return early if abusive word is found
+            }
+
+            // Proceed if no abusive word was found (this will be handled after loop finishes)
+            if (isAbusive === false && word === words[words.length - 1]) {
+                if(username) {
+                    localStorage.setItem('username', username);
+                    usernamePage.classList.add('hidden');
+                    chatPage.classList.remove('hidden');
+
+                    var socket = new SockJS('/ws');
+                    stompClient = Stomp.over(socket);
+                    stompClient.debug = null;
+                    stompClient.connect({}, onConnected, onError);
+                } else {
+                    alert('Please enter a username.');
+                    return;
+                }
+            }
+        }).catch(error => {
+            // Handle any error that occurs during the checkAbuseWord request
+            console.error("Error checking abuse word:", error);
+        });
     }
 
-    if(username) {
-        localStorage.setItem('username', username);
-        usernamePage.classList.add('hidden');
-        chatPage.classList.remove('hidden');
 
-        var socket = new SockJS('/ws');
-        stompClient = Stomp.over(socket);
-        stompClient.debug = null;
-        stompClient.connect({}, onConnected, onError);
-    }
-    else {
-        alert('Please enter a username.');
-        return;
-    }
     event.preventDefault();
 }
 
@@ -228,16 +242,17 @@ window.onload = function () {
 
         var socket = new SockJS('/ws');
         stompClient = Stomp.over(socket);
-        // stompClient.debug = null;
+        stompClient.debug = null;
         stompClient.connect({}, onConnected, onError);
     }
 };
 
 async function checkAbuseWord(word) {
     try {
-        const response = await fetch(`/api/abuse/search?word=${encodeURIComponent(word)}`);
+        const response = await fetch(`/api/abuse/search/${encodeURIComponent(word)}`);
+        // const response = await fetch(`/api/abuse/search?word=${encodeURIComponent(word)}`);
         if (response.ok) {
-            const isAbusive = await response.json();
+            const isAbusive = await response.json();            
             console.log(`Is abusive: ${isAbusive}`);
             return isAbusive;
         } else {
