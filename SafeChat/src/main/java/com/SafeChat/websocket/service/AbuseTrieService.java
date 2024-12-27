@@ -16,12 +16,8 @@ public class AbuseTrieService {
         abuseTrie.insert(word);
     }
 
-    public boolean isAbuseWord(String word)
-    {
-        if (abuseTrie.search(word)) {
-            return true;
-        } else
-            return false;
+    public boolean isAbuseWord(String word) {
+        return abuseTrie.search(word);
     }
 
     public String maskAbusiveWord(String word) {
