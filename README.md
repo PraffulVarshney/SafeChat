@@ -2,11 +2,12 @@
 
 • Developed a WebSocket-based group chat application in Java, enabling real-time communication with low -latency between users. <br>
 • Enhanced user experience and maintained a safe chat environment by dynamically censoring inappropriate language. <br>
-• Implemented an abuse masking system using a trie data structure to efficiently detect and mask abusive words in chat messages. <br>
+• Implemented an abuse masking system using a trie data structure to detect and mask abusive words in chat messages efficiently. <br>
+• Integrated Firebase for secure user authentication and store encrypted chat. <br>
 
 You can try it here -> https://safe-chat-zzzf.onrender.com/
 
-Wait for some time; it may take a few seconds to load. (P.S. Use English slangs only)
+Wait for some time; it may take a few seconds to load. (P.S. Use English/Hindi slangs only)
 
 ## Features
 • Simple and intuitive user interface. <br>
