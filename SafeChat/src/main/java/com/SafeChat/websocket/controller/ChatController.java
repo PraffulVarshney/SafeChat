@@ -1,4 +1,4 @@
-package com.SafeChat.websocket.chat;
+package com.SafeChat.websocket.controller;
 
 import com.SafeChat.websocket.model.ChatMessage;
 import com.SafeChat.websocket.service.AbuseTrieService;
@@ -20,14 +20,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 @RestController
 public class ChatController {
 
-    private final AbuseTrieService abuseTrieService;
-    private final FirebaseMessageService firebaseMessageService;
-
     @Autowired
-    public ChatController(AbuseTrieService abuseTrieService, FirebaseMessageService firebaseMessageService) {
-        this.abuseTrieService = abuseTrieService;
-        this.firebaseMessageService = firebaseMessageService;
-    }
+    AbuseTrieService abuseTrieService;
+    @Autowired
+    FirebaseMessageService firebaseMessageService;
+
 
     @MessageMapping("/chat.sendMessage")
     @SendTo("/topic/public")

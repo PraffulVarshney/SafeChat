@@ -17,8 +17,9 @@ public class EncryptionUtil {
 
     @Value("${encryption.initVector}")
     private String initVector;
-    
-    private String algo = "AES/CBC/PKCS5PADDING";
+
+    @Value(("${encryption.algo}"))
+    private String algo;
 
     public String encrypt(String value) {
         try {
