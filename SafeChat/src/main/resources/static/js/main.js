@@ -1,4 +1,5 @@
 'use strict';
+import loadingMsg from "./loadingMsg.js";
 
 var usernamePage = document.querySelector('#username-page');
 var chatPage = document.querySelector('#chat-page');
@@ -8,6 +9,7 @@ var messageInput = document.querySelector('#message');
 var messageArea = document.querySelector('#messageArea');
 var connectingElement = document.querySelector('.connecting');
 var messageExit = document.querySelector('#exit');
+var snowFall = document.querySelector('.snowflakes-container')
 
 var createRoomButton = document.querySelector('.create-room');
 
@@ -26,9 +28,11 @@ var colors = [
     '#ffc107', '#ff85af', '#FF9800', '#39bbb0'
 ];
 
-async function connect(event) {
-    username = document.querySelector('#name').value.trim();    const words = username.split(' ');
+function connect(event) {
+    loadingMsgs();
 
+    username = document.querySelector('#name').value.trim();    
+    const words = username.split(' ');
     // Check each word in the username for abuse
     let isAbusive = false;
     for (const word of words) {
@@ -50,7 +54,7 @@ async function connect(event) {
                     var socket = new SockJS('/ws');
                     stompClient = Stomp.over(socket);
                     stompClient.debug = null;
-                    stompClient.connect({}, onConnected, onError);
+                    stompClient.connect({}, () => onConnected(false), onError);
                 } else {
                     alert('Please enter a username.');
                     return;
@@ -66,8 +70,8 @@ async function connect(event) {
     event.preventDefault();
 }
 
-function onConnected() {
-    // Fetch previous chat messages from the server
+function onConnected(isReload = false) {
+    // Fetch previous chat messages from the server    
     fetch('/chats')
         .then(response => response.json())
         .then(messages => {
@@ -79,24 +83,32 @@ function onConnected() {
                 };
                 onMessageReceived(payload)
             });
+
+            // Send a "user joined" message only if it's not a reload
+            if (!isReload) {
+                var timestamp = new Date().getTime();
+                var chatMessage = {
+                    sender: username,
+                    content: `${username} joined!`,
+                    type: 'JOIN',
+                    timestamp: timestamp
+                };
+                stompClient.send("/app/chat.addUser", {}, JSON.stringify(chatMessage));
+            }
+            setTimeout(() => {
+              }, 10000); // 1000 milliseconds = 1 second
+              
+            connectingElement.classList.add('hidden');
+
         })
         .catch(error => {
             console.log("Error fetching previous messages:", error);
         });
 
+
     // Subscribe to the Public Topic
     stompClient.subscribe('/topic/public', onMessageReceived);
 
-    // Tell your username to the server
-    var timestamp = new Date().getTime();
-    var chatMessage = {
-        sender: username,
-        content: `${username} joined!`,
-        type: 'JOIN',
-        timestamp : timestamp
-    };
-    stompClient.send("/app/chat.addUser", {}, JSON.stringify(chatMessage));
-    connectingElement.classList.add('hidden');
 }
 
 
@@ -117,11 +129,11 @@ function sendMessage(event) {
             timestamp : timestamp
         };
         stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(chatMessage));
+        snowfall(messageInput.value.length);
         messageInput.value = '';
     }
     event.preventDefault();
 }
-
 
 function onMessageReceived(payload) {
     var message = JSON.parse(payload.body);
@@ -154,9 +166,16 @@ function onMessageReceived(payload) {
     textElement.appendChild(messageText);
 
     messageElement.appendChild(textElement);
-
     messageArea.appendChild(messageElement);
     messageArea.scrollTop = messageArea.scrollHeight;
+}
+
+function loadingMsgs()
+{
+    const randomIndex = Math.floor(Math.random() * loadingMsg.length);
+    let message = loadingMsg[randomIndex];
+    connectingElement.innerText = message;
+
 }
 
 
@@ -169,35 +188,36 @@ function getAvatarColor(messageSender) {
     return colors[index];
 }
 
-    function exitChat(event) {
-        event.preventDefault();
-        
-        var username = localStorage.getItem("username");
-        localStorage.removeItem('username'); // Clear the saved username
-        var timestamp = new Date().getTime();
-        var chatMessage = {
-            sender: username,
-            content: `${username} left!`,
-            type: 'LEAVE',
-            timestamp : timestamp
-        };
-        stompClient.send("/app/chat.leaveUser", {}, JSON.stringify(chatMessage));
-        
-        // Disconnect from WebSocket if connected
-        if (stompClient) {
-            stompClient.disconnect(() => {
-                console.log('Disconnected from server');
-            });
-        }
-        // Clear chat messages from the chat page
-        var messageArea = document.getElementById("messageArea"); // Assuming the chat messages are inside an element with id "messageArea"
-        while (messageArea.firstChild) {
-            messageArea.removeChild(messageArea.firstChild);
-        }
-        
-        usernamePage.classList.remove('hidden'); // Show the username page
-        chatPage.classList.add('hidden');       // Hide the chat page
+function exitChat(event) {
+    event.preventDefault();
+    
+    var username = localStorage.getItem("username");
+    localStorage.removeItem('username'); // Clear the saved username
+    var timestamp = new Date().getTime();
+    var chatMessage = {
+        sender: username,
+        content: `${username} left!`,
+        type: 'LEAVE',
+        timestamp : timestamp
+    };
+    stompClient.send("/app/chat.leaveUser", {}, JSON.stringify(chatMessage));
+    
+    // Disconnect from WebSocket if connected
+    if (stompClient) {
+        stompClient.disconnect(() => {
+            console.log('Disconnected from server');
+        });
     }
+    // Clear chat messages from the chat page
+    var messageArea = document.getElementById("messageArea"); // Assuming the chat messages are inside an element with id "messageArea"
+    while (messageArea.firstChild) {
+        messageArea.removeChild(messageArea.firstChild);
+    }
+    
+    usernamePage.classList.remove('hidden'); // Show the username page
+    chatPage.classList.add('hidden');       // Hide the chat page
+    connectingElement.classList.remove('hidden');
+}
 
 function createRoom() {
     var roomName = prompt("Enter the name of the room:");
@@ -234,17 +254,46 @@ messageForm.addEventListener('submit', sendMessage, true)
 messageExit.addEventListener('click', exitChat, true)
 createRoomButton.addEventListener('click', createRoom);
 
-window.onload = function () {
+window.onload = function () {   
+    loadingMsgs();
     const savedUsername = localStorage.getItem('username');
     if (savedUsername) {
         username = savedUsername;
         usernamePage.classList.add('hidden');
         chatPage.classList.remove('hidden');
-
         var socket = new SockJS('/ws');
         stompClient = Stomp.over(socket);
         stompClient.debug = null;
-        stompClient.connect({}, onConnected, onError);
+        stompClient.connect({}, () => onConnected(true), onError);
+        // stompClient.connect({}, onConnected, onError);
+    }
+};
+
+function snowfall(msgLen) {
+    const snowflakeCount = Math.min(msgLen*10,500); // Number of snowflakes
+    // const snowflakeContainer = document.body;
+    const snowflakeContainer = snowFall;
+
+
+    for (let i = 0; i < snowflakeCount; i++) {
+        const snowflake = document.createElement('div');
+        snowflake.classList.add('snowflake');
+        
+        // Randomize size (between 10px and 20px)
+        const size = Math.random() * 10 + 20;
+        snowflake.style.width = `${size}px`;
+        snowflake.style.height = `${size}px`;
+
+        // Randomize left position (between 0% and 100% of the viewport width)
+        snowflake.style.left = `${Math.random() * 100}vw`;
+        snowflake.style.top = `-${Math.random() * 80}vw`;
+
+        // Randomize animation duration (between 5s and 8s)
+        const randomSpeed = Math.random() * 3 + 10; // Speed between 5s and 8s
+        snowflake.style.animationDuration = `${randomSpeed}s`;
+
+        // Append snowflake to the body
+        snowflakeContainer.appendChild(snowflake);  
     }
 };
 

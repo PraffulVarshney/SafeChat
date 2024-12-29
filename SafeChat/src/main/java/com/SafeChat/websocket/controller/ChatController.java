@@ -25,7 +25,6 @@ public class ChatController {
     @Autowired
     FirebaseMessageService firebaseMessageService;
 
-
     @MessageMapping("/chat.sendMessage")
     @SendTo("/topic/public")
     public ChatMessage sendMessage(@Payload ChatMessage chatMessage) {
@@ -47,18 +46,29 @@ public class ChatController {
         }
     }
 
+    public static boolean isEmoji(int codePoint) {
+        return (codePoint > 255);
+        // (codePoint >= 0x1F600 && codePoint <= 0x1F64F) || // Emoticons
+        // (codePoint >= 0x1F300 && codePoint <= 0x1F5FF) || // Symbols & Pictographs
+        // (codePoint >= 0x1F680 && codePoint <= 0x1F6FF) || // Transport & Map Symbols
+        // (codePoint >= 0x1F700 && codePoint <= 0x1F77F); // Alchemical Symbols
+    }
+
     private void processChatMessage(ChatMessage chatMessage) {
         String message = chatMessage.getContent();
         StringBuilder maskedMessage = new StringBuilder();
         StringBuilder curr = new StringBuilder();
 
-        for (char c : message.toCharArray()) {
-            if (c != ' ')
-                curr.append(c);
-            else {
+        for (int i = 0; i < message.length();) {
+            int codePoint = message.codePointAt(i);
+            i += Character.charCount(codePoint);
+            // Check if the codePoint is an emoji
+            if (Character.isWhitespace(codePoint) || (((char) codePoint) == ' ') || isEmoji(codePoint)) {
                 maskedMessage.append(abuseTrieService.maskAbusiveWord(curr.toString()));
-                maskedMessage.append(" ");
+                maskedMessage.append(Character.toChars(codePoint));
                 curr.setLength(0);
+            } else {
+                curr.append((char) codePoint);
             }
         }
 
@@ -70,8 +80,8 @@ public class ChatController {
     @SendTo("/topic/public")
     public ChatMessage addUser(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor) {
         // Add username in web socket session
-        firebaseMessageService.saveMessage(chatMessage); // Now using the new service
         headerAccessor.getSessionAttributes().put("username", chatMessage.getSender());
+        firebaseMessageService.saveMessage(chatMessage); // Now using the new service
         return chatMessage;
     }
 
