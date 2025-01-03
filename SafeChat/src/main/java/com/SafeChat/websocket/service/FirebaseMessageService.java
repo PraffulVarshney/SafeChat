@@ -45,8 +45,7 @@ public class FirebaseMessageService {
         CompletableFuture<List<ChatMessage>> future = new CompletableFuture<>();
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference("chats");
         long currentTimestamp = System.currentTimeMillis();
-        long twentyFourHoursAgo = currentTimestamp - (24 * 60 * 60 * 1000);
-
+        long twentyFourHoursAgo = currentTimestamp - (24 * 60 * 60 * 1000 * 14);
         ref.startAt(twentyFourHoursAgo)
                 .orderByChild("timestamp")
                 .limitToLast(1000)
