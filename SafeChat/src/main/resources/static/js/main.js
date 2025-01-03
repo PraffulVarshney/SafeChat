@@ -273,8 +273,7 @@ function snowfall(msgLen) {
     const snowflakeCount = Math.min(msgLen*10,500); // Number of snowflakes
     // const snowflakeContainer = document.body;
     const snowflakeContainer = snowFall;
-
-
+    snowflakeContainer.replaceChildren();
     for (let i = 0; i < snowflakeCount; i++) {
         const snowflake = document.createElement('div');
         snowflake.classList.add('snowflake');
