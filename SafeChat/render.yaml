@@ -1,0 +1,13 @@
+# Exported from Render on 2025-01-03T21:22:12Z
+services:
+- type: web
+  name: safechat:v1
+  runtime: image
+  image:
+    url: docker.io/roronoa0/safechat:latest
+    creds:
+      fromRegistryCreds:
+        name: roronoa0
+  plan: free
+  region: oregon
+version: "1"
