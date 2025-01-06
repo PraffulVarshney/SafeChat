@@ -5,6 +5,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+
 import com.SafeChat.websocket.model.ChatMessage;
 import com.SafeChat.websocket.model.EncryptionUtil;
 import java.util.concurrent.CompletableFuture;
@@ -26,7 +27,10 @@ public class FirebaseMessageService {
         this.databaseReference = FirebaseDatabase.getInstance().getReference("chats");
     }
 
-    public void saveMessage(ChatMessage chatMessage) {
+    public void saveMessage(ChatMessage chatMessage, String roomId) {
+        String collection = "chats" + roomId;
+        System.out.println(collection);
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference(collection);
         ChatMessage dbMessage = new ChatMessage();
 
         // dbMessage.setSender(encryptionUtil.encrypt(chatMessage.getSender()));
@@ -34,16 +38,20 @@ public class FirebaseMessageService {
         dbMessage.setContent(encryptionUtil.encrypt(chatMessage.getContent())); // Encrypt only for Firebase
         dbMessage.setTimestamp(chatMessage.getTimestamp());
         dbMessage.setType(chatMessage.getType());
-        databaseReference.push().setValueAsync(dbMessage);
+        dbMessage.setRoomId(chatMessage.getRoomId());
+        ref.push().setValueAsync(dbMessage);
     }
 
     public DatabaseReference getDatabaseReference() {
         return databaseReference;
     }
 
-    public CompletableFuture<List<ChatMessage>> fetchMessages() {
+    public CompletableFuture<List<ChatMessage>> fetchMessages(String roomId) {
+
+        String collection = "chats" + roomId;
+        System.out.println("fetch" + roomId);
         CompletableFuture<List<ChatMessage>> future = new CompletableFuture<>();
-        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("chats");
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference(collection);
         long currentTimestamp = System.currentTimeMillis();
         long twentyFourHoursAgo = currentTimestamp - (24 * 60 * 60 * 1000 * 14);
         ref.startAt(twentyFourHoursAgo)

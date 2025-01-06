@@ -9,13 +9,16 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
+// import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RestController;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 @RestController
 public class ChatController {
@@ -25,17 +28,31 @@ public class ChatController {
     @Autowired
     FirebaseMessageService firebaseMessageService;
 
-    @MessageMapping("/chat.sendMessage")
-    @SendTo("/topic/public")
-    public ChatMessage sendMessage(@Payload ChatMessage chatMessage) {
+    // @MessageMapping("/chat.sendMessage")
+    // @SendTo("/topic/{roomId}")
+    // public ChatMessage sendMessage(@Payload ChatMessage chatMessage) {
+    // processChatMessage(chatMessage);
+    // String roomId = chatMessage.getRoomId();
+    // System.out.println("roomid" + roomId);
+    // firebaseMessageService.saveMessage(chatMessage, roomId); // Now using the new
+    // service
+    // return chatMessage;
+    // }
+
+    @MessageMapping("/chat.sendMessage/{roomId}")
+    @SendTo("/topic/{roomId}")
+    public ChatMessage sendMessage(@DestinationVariable String roomId, ChatMessage chatMessage) {
         processChatMessage(chatMessage);
-        firebaseMessageService.saveMessage(chatMessage); // Now using the new service
+        chatMessage.setRoomId(roomId);
+        firebaseMessageService.saveMessage(chatMessage, roomId);
         return chatMessage;
     }
 
-    @GetMapping("/chats")
-    public List<ChatMessage> getChatMessages() {
-        CompletableFuture<List<ChatMessage>> future = firebaseMessageService.fetchMessages();
+    // @PreAuthorize("isAuthenticated()")
+    @GetMapping("/chats/{roomId}")
+    public List<ChatMessage> getChatMessages(@PathVariable String roomId) {
+        System.out.println("roomed" + roomId);
+        CompletableFuture<List<ChatMessage>> future = firebaseMessageService.fetchMessages(roomId);
         try {
             List<ChatMessage> messages = future.get(); // Waits until the future is completed
             System.out.println("Messages retrieved from Firebase: " + messages.size());
@@ -48,10 +65,6 @@ public class ChatController {
 
     public static boolean isEmoji(int codePoint) {
         return (codePoint > 255);
-        // (codePoint >= 0x1F600 && codePoint <= 0x1F64F) || // Emoticons
-        // (codePoint >= 0x1F300 && codePoint <= 0x1F5FF) || // Symbols & Pictographs
-        // (codePoint >= 0x1F680 && codePoint <= 0x1F6FF) || // Transport & Map Symbols
-        // (codePoint >= 0x1F700 && codePoint <= 0x1F77F); // Alchemical Symbols
     }
 
     private void processChatMessage(ChatMessage chatMessage) {
@@ -76,19 +89,19 @@ public class ChatController {
         chatMessage.setContent(maskedMessage.toString());
     }
 
-    @MessageMapping("/chat.addUser")
-    @SendTo("/topic/public")
-    public ChatMessage addUser(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor) {
-        // Add username in web socket session
+    @MessageMapping("/chat.addUser/{roomId}")
+    @SendTo("/topic/{roomId}")
+    public ChatMessage addUser(@DestinationVariable String roomId, ChatMessage chatMessage,
+            SimpMessageHeaderAccessor headerAccessor) {
         headerAccessor.getSessionAttributes().put("username", chatMessage.getSender());
-        firebaseMessageService.saveMessage(chatMessage); // Now using the new service
+        firebaseMessageService.saveMessage(chatMessage, roomId);
         return chatMessage;
     }
 
-    @MessageMapping("/chat.leaveUser")
-    @SendTo("/topic/public")
-    public ChatMessage leaveUser(@Payload ChatMessage chatMessage) {
-        firebaseMessageService.saveMessage(chatMessage);
+    @MessageMapping("/chat.leaveUser/{roomId}")
+    @SendTo("/topic/{roomId}")
+    public ChatMessage leaveUser(@DestinationVariable String roomId, ChatMessage chatMessage) {
+        firebaseMessageService.saveMessage(chatMessage, roomId);
         return chatMessage;
     }
 

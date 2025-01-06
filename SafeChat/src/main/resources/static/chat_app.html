@@ -1,0 +1,322 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Spring Boot WebSocket Chat Application</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./css/main1.css" />
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  </head>
+  <body>
+    <link
+      href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
+      rel="stylesheet"
+    />
+    <div class="snowflakes-container"></div>
+    <div id="username-page" class="hidden">
+      <div class="username-page-container">
+        <h1 class="title">Type your username to enter the Chatroom</h1>
+
+        <form id="usernameForm" name="usernameForm">
+          <div class="form-group">
+            <input
+              type="text"
+              id="name"
+              placeholder="Username"
+              autocomplete="off"
+              class="form-control"
+              maxlength="20"
+              pattern="^(?=.*[A-Za-z0-9_\-\.])[A-Za-z0-9 _\-\.]*$"
+              title="Must include at least one letter, number, -, _, or ., and no only spaces."
+              required
+            />
+          </div>
+          <div class="form-group">
+            <button type="submit" class="accent username-submit">
+              Start Chatting
+            </button>
+          </div>
+        </form>
+
+        <form id="createRoomForm" name="createRoomForm">
+          <div class="form-group">
+            <input
+              type="hidden"
+              id="createRoomUsername"
+              name="username"
+              value=""
+            />
+            <button type="submit" class="accent create-room">
+              Create Chat Room
+            </button>
+          </div>
+        </form>
+
+        <form id="joinRoomForm" name="joinRoomForm">
+          <div class="form-group">
+            <input
+              type="hidden"
+              id="joinRoomUsername"
+              name="username"
+              value=""
+            />
+            <button type="submit" class="accent join-room">
+              Join Chat Room
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="chat-page">
+      <div class="container">
+        <div class="row clearfix">
+          <div class="col-lg-12">
+            <div class="card chat-app">
+              <div id="plist" class="people-list">
+                <div class="input-group">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text"
+                      ><i class="fa fa-search"></i
+                    ></span>
+                  </div>
+                  <input
+                    type="text"
+                    class="form-control"
+                    placeholder="Search..."
+                  />
+                </div>
+                <ul class="list-unstyled chat-list mt-2 mb-0">
+                  <li class="clearfix">
+                    <img
+                      src="https://bootdey.com/img/Content/avatar/avatar1.png"
+                      alt="avatar"
+                    />
+                    <div class="about">
+                      <div class="name">Vincent Porter</div>
+                      <div class="status">
+                        <i class="fa fa-circle offline"></i> left 7 mins ago
+                      </div>
+                    </div>
+                  </li>
+                  <li class="clearfix active">
+                    <img
+                      src="https://bootdey.com/img/Content/avatar/avatar2.png"
+                      alt="avatar"
+                    />
+                    <div class="about">
+                      <div class="name">Aiden Chavez</div>
+                      <div class="status">
+                        <i class="fa fa-circle online"></i> online
+                      </div>
+                    </div>
+                  </li>
+                  <li class="clearfix">
+                    <img
+                      src="https://bootdey.com/img/Content/avatar/avatar3.png"
+                      alt="avatar"
+                    />
+                    <div class="about">
+                      <div class="name">Mike Thomas</div>
+                      <div class="status">
+                        <i class="fa fa-circle online"></i> online
+                      </div>
+                    </div>
+                  </li>
+                  <li class="clearfix">
+                    <img
+                      src="https://bootdey.com/img/Content/avatar/avatar7.png"
+                      alt="avatar"
+                    />
+                    <div class="about">
+                      <div class="name">Christian Kelly</div>
+                      <div class="status">
+                        <i class="fa fa-circle offline"></i> left 10 hours ago
+                      </div>
+                    </div>
+                  </li>
+                  <li class="clearfix">
+                    <img
+                      src="https://bootdey.com/img/Content/avatar/avatar8.png"
+                      alt="avatar"
+                    />
+                    <div class="about">
+                      <div class="name">Monica Ward</div>
+                      <div class="status">
+                        <i class="fa fa-circle online"></i> online
+                      </div>
+                    </div>
+                  </li>
+                  <li class="clearfix">
+                    <img
+                      src="https://bootdey.com/img/Content/avatar/avatar3.png"
+                      alt="avatar"
+                    />
+                    <div class="about">
+                      <div class="name">Dean Henry</div>
+                      <div class="status">
+                        <i class="fa fa-circle offline"></i> offline since Oct
+                        28
+                      </div>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+              <div class="chat">
+                <div class="chat-header clearfix">
+                  <div class="row">
+                    <div class="col-lg-6">
+                      <div class="chat-about">
+                        <h6 class="m-b-0">Chat Room</h6>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="chat-history">
+                  <ul class="m-b-0">
+                    <li class="clearfix">
+                      <div class="message-data text-right">
+                        <span class="message-data-time">10:10 AM, Today</span>
+                        <img
+                          src="https://bootdey.com/img/Content/avatar/avatar7.png"
+                          alt="avatar"
+                        />
+                      </div>
+                      <div class="message other-message float-right">
+                        Hi Aiden, how are you? How is the project coming along?
+                      </div>
+                    </li>
+                    <li class="clearfix">
+                      <div class="message-data">
+                        <span class="message-data-time">10:12 AM, Today</span>
+                      </div>
+                      <div class="message my-message">
+                        Are we meeting today?
+                      </div>
+                    </li>
+                    <li class="clearfix">
+                      <div class="message-data">
+                        <span class="message-data-time">10:15 AM, Today</span>
+                      </div>
+                      <div class="message my-message">
+                        Project has been already finished and I have results to
+                        show you.
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+                <div class="chat-message clearfix">
+                  <div class="input-group mb-0">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text"
+                        ><i class="fa fa-send"></i
+                      ></span>
+                    </div>
+                    <input
+                      type="text"
+                      class="form-control"
+                      placeholder="Enter text here..."
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@7.12.15/dist/sweetalert2.all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.1.4/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script type="module" src="/js/main.js"></script>
+    <style id="snow-style">
+      #snow {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        overflow: hidden;
+        z-index: 9;
+        pointer-events: none;
+        opacity: 0.5;
+      }
+      .snow {
+        display: block;
+        position: absolute;
+        width: 0.6rem;
+        height: 0.6rem;
+        background: white;
+        border-radius: 99px;
+      }
+    </style>
+    <section id="snow"></section>
+    <script>
+      !(function () {
+        try {
+          for (
+            var t = document.getElementById("snow"),
+              n = document.getElementById("snow-style"),
+              e = 0;
+            e < 128;
+            e++
+          ) {
+            var a = 100 * w(),
+              s = 20 * w() - 10,
+              r = a + s,
+              o = a + s / 2,
+              l = 0.3 + w() / 2,
+              i = 100 * l,
+              c = w(),
+              m = 10 + 20 * w(),
+              d = -30 * w(),
+              f = document.createElement("i");
+            f.classList.add("snow"),
+              (f.style.cssText = [
+                "opacity:",
+                w(),
+                ";transform:translate(",
+                a,
+                "vw,-10px) scale(",
+                c,
+                ");animation:snow",
+                e,
+                " ",
+                m,
+                "s ",
+                d,
+                "s linear infinite",
+              ].join("")),
+              t.appendChild(f),
+              (n.innerHTML += [
+                "@keyframes  snow",
+                e,
+                "{",
+                100 * l,
+                "%{transform:translate(",
+                r,
+                "vw,",
+                i,
+                "vh) scale(",
+                c,
+                ")}100%{transform:translate(",
+                o,
+                "vw,100vh) scale(",
+                c,
+                ")}}",
+              ].join(""));
+          }
+        } catch (t) {}
+        function w() {
+          return Math.random();
+        }
+      })();
+    </script>
+  </body>
+</html> -->

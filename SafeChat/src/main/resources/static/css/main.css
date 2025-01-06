@@ -89,6 +89,8 @@ button.primary {
 
 button.accent {
     background-color: #6db33f;
+    width: 150px;
+    border-radius: 5px;
     box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.12);
     color: #fff;
 }
@@ -131,7 +133,9 @@ button.accent {
     max-width: 1000px;
     margin-left: auto;
     margin-right: auto;
+    /* background-color: rgba(217, 25, 25, 0.31); */
     background-color: rgba(198, 198, 198, 0.31);
+
     box-shadow: 0 1px 11px rgba(0, 0, 0, 0.27);
     margin-top: 30px;
     height: calc(100% - 60px);
@@ -142,6 +146,14 @@ button.accent {
 #chat-page ul {
     list-style-type: none;
     background-color: #FFF;
+    /* background-image: url('./static/pattern.svg'); */
+    /* background-image: url('../pattern.svg'); */
+    /* background-image: url('../social-media-sketch-vector-seamless-600nw-1660950727.webp'); */
+
+    /* background-blend-mode: color; */
+    /* opacity: 0px; */
+    
+    background-color: #cccccc;
     margin: 0;  
     overflow: auto;
     overflow-y: scroll;
@@ -224,10 +236,15 @@ button.accent {
     margin-left: 5px;
 }
 
+/* #messageArea {
+    background-color: ;
+} */
+
 .chat-header {
     text-align: center;
     padding: 15px;
-    background-color: #323848;
+    /* background-color: #323848; */
+    /* background-color: rgba(198, 198, 198, 0.31); */
     color: #ffffff;
     border-bottom: 1px solid #ececec;
 }
