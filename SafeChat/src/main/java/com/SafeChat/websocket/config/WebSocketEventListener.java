@@ -1,11 +1,11 @@
 package com.SafeChat.websocket.config;
 
-import com.SafeChat.websocket.model.ChatMessage;
-import com.SafeChat.websocket.model.MessageType;
+// import com.SafeChat.websocket.model.ChatMessage;
+// import com.SafeChat.websocket.model.MessageType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
-import org.springframework.messaging.simp.SimpMessageSendingOperations;
+// import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
@@ -15,7 +15,7 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 @RequiredArgsConstructor
 public class WebSocketEventListener {
 
-    private final SimpMessageSendingOperations messagingTemplate;
+    // private final SimpMessageSendingOperations messagingTemplate;
 
     @EventListener
     public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
@@ -23,11 +23,11 @@ public class WebSocketEventListener {
         String username = (String) headerAccessor.getSessionAttributes().get("username");
         if (username != null) {
             log.info("user disconnected: {}", username);
-            var chatMessage = ChatMessage.builder()
-                    .type(MessageType.LEAVE)
-                    .sender(username)
-                    .build();
-            messagingTemplate.convertAndSend("/topic/public", chatMessage);
+            // var chatMessage = ChatMessage.builder()
+            // .type(MessageType.LEAVE)
+            // .sender(username)
+            // .build();
+            // messagingTemplate.convertAndSend("/topic/public", chatMessage);
         }
     }
 

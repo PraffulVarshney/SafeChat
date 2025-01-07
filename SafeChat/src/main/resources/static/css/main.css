@@ -17,7 +17,7 @@ body {
     font-size: 1rem;
     line-height: 1.58;
     color: #333;
-    background-color: #f4f4f4;
+    background-color: #000000;
     height: 100%;
 }
 
@@ -128,21 +128,21 @@ button.accent {
 }
 
 .chat-container {
-    max-width: 700px;
+    max-width: 1000px;
     margin-left: auto;
     margin-right: auto;
-    background-color: #fff;
+    background-color: rgba(198, 198, 198, 0.31);
     box-shadow: 0 1px 11px rgba(0, 0, 0, 0.27);
     margin-top: 30px;
     height: calc(100% - 60px);
-    max-height: 600px;
+    max-height: 800px;
     position: relative;
 }
 
 #chat-page ul {
     list-style-type: none;
     background-color: #FFF;
-    margin: 0;
+    margin: 0;  
     overflow: auto;
     overflow-y: scroll;
     padding: 0 20px 0px 20px;
@@ -205,6 +205,11 @@ button.accent {
 
 #chat-page .chat-message p {
     color: #43464b;
+    word-wrap: break-word; 
+    overflow-wrap: anywhere;
+    max-width: 100%; 
+    white-space: pre-wrap;
+    font-family: Arial, sans-serif; /* Or a font with emoji support */
 }
 
 #messageForm .input-group input {
@@ -222,6 +227,8 @@ button.accent {
 .chat-header {
     text-align: center;
     padding: 15px;
+    background-color: #323848;
+    color: #ffffff;
     border-bottom: 1px solid #ececec;
 }
 
@@ -297,4 +304,28 @@ button.secondary {
     position: absolute;
     top: 12px;
     right: 12px;
+}
+
+.snowflake {
+    position: fixed;
+    top: -10px;
+    left: 50%;
+    background-color: white;
+    border-radius: 50%;
+    width: 15px;
+    height: 15px;
+    animation: snowfallRotate 10s linear forwards; /* Combine both effects here */
+    opacity: 0.8;
+}
+
+/* Combined snowfall and rotate animation */
+@keyframes snowfallRotate {
+    0% {
+        transform: translateX(0) translateY(0) rotate(0deg); /* Start position */
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(50px) translateY(100vh) rotate(360deg); /* End position with rotation */
+        opacity: 0; /* Fade out */
+    }
 }
