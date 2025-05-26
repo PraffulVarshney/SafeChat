@@ -5,14 +5,20 @@ import com.SafeChat.websocket.service.AbuseTrieService;
 import com.SafeChat.websocket.service.FirebaseMessageService;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,24 +31,29 @@ public class ChatController {
     @Autowired
     FirebaseMessageService firebaseMessageService;
 
-    @MessageMapping("/chat.sendMessage")
-    @SendTo("/topic/public")
-    public ChatMessage sendMessage(@Payload ChatMessage chatMessage) {
+    @MessageMapping("/room/{roomId}/sendMessage")
+    @SendTo("/topic/room/{roomId}")
+    public ChatMessage sendMessage(@DestinationVariable String roomId, @Payload ChatMessage chatMessage) {
         processChatMessage(chatMessage);
         firebaseMessageService.saveMessage(chatMessage); // Now using the new service
         return chatMessage;
     }
-
-    @GetMapping("/chats")
-    public List<ChatMessage> getChatMessages() {
-        CompletableFuture<List<ChatMessage>> future = firebaseMessageService.fetchMessages();
+///rooms/${roomId}/messages?password=${roomPassword}
+    @GetMapping("/rooms/{roomId}/messages")
+    public ResponseEntity<List<ChatMessage>> getChatMessages(@PathVariable String roomId, @RequestParam String password) {
         try {
+//            boolean isValid = firebaseMessageService.validateRoomPassword(roomId, password);
+            boolean isValid = true;
+            if (!isValid) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Collections.emptyList());
+            }
+            CompletableFuture<List<ChatMessage>> future = firebaseMessageService.fetchMessages(roomId);
             List<ChatMessage> messages = future.get(); // Waits until the future is completed
-            System.out.println("Messages retrieved from Firebase: " + messages.size());
-            return messages;
+            System.out.println("Room messages retrieved from Firebase (Room: " + roomId + "): " + messages.size());
+            return ResponseEntity.ok(messages);
         } catch (Exception e) {
             e.printStackTrace();
-            return new ArrayList<>();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.emptyList());
         }
     }
 
@@ -76,18 +87,18 @@ public class ChatController {
         chatMessage.setContent(maskedMessage.toString());
     }
 
-    @MessageMapping("/chat.addUser")
-    @SendTo("/topic/public")
-    public ChatMessage addUser(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor) {
+    @MessageMapping("/room/{roomId}/addUser")
+    @SendTo("/topic/room/{roomId}")
+    public ChatMessage addUser(@DestinationVariable String roomId, @Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor) {
         // Add username in web socket session
         headerAccessor.getSessionAttributes().put("username", chatMessage.getSender());
         firebaseMessageService.saveMessage(chatMessage); // Now using the new service
         return chatMessage;
     }
 
-    @MessageMapping("/chat.leaveUser")
-    @SendTo("/topic/public")
-    public ChatMessage leaveUser(@Payload ChatMessage chatMessage) {
+    @MessageMapping("/room/{roomId}/leaveUser")
+    @SendTo("/topic/room/{roomId}")
+    public ChatMessage leaveUser(@DestinationVariable String roomId, @Payload ChatMessage chatMessage) {
         firebaseMessageService.saveMessage(chatMessage);
         return chatMessage;
     }

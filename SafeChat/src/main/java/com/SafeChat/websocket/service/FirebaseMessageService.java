@@ -34,6 +34,7 @@ public class FirebaseMessageService {
         dbMessage.setContent(encryptionUtil.encrypt(chatMessage.getContent())); // Encrypt only for Firebase
         dbMessage.setTimestamp(chatMessage.getTimestamp());
         dbMessage.setType(chatMessage.getType());
+        dbMessage.setRoomId(chatMessage.getRoomId());
         databaseReference.push().setValueAsync(dbMessage);
     }
 
@@ -41,21 +42,19 @@ public class FirebaseMessageService {
         return databaseReference;
     }
 
-    public CompletableFuture<List<ChatMessage>> fetchMessages() {
+    public CompletableFuture<List<ChatMessage>> fetchMessages(String roomId) {
         CompletableFuture<List<ChatMessage>> future = new CompletableFuture<>();
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference("chats");
         long currentTimestamp = System.currentTimeMillis();
         long twentyFourHoursAgo = currentTimestamp - (24 * 60 * 60 * 1000 * 14);
-        ref.startAt(twentyFourHoursAgo)
-                .orderByChild("timestamp")
-                .limitToLast(1000)
+        ref.orderByChild("roomId").equalTo(roomId)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         List<ChatMessage> chatMessages = new ArrayList<>();
                         for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                             ChatMessage chatMessage = snapshot.getValue(ChatMessage.class);
-                            if (chatMessage != null) {
+                            if (chatMessage != null && chatMessage.getTimestamp() >= twentyFourHoursAgo) {
                                 // chatMessage.setSender(encryptionUtil.decrypt(chatMessage.getSender()));
                                 chatMessage.setSender(chatMessage.getSender());
                                 chatMessage.setContent(encryptionUtil.decrypt(chatMessage.getContent()));

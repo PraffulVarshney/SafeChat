@@ -15,13 +15,7 @@ var createRoomButton = document.querySelector('.create-room');
 
 var stompClient = null;
 var username = null;
-
-var socket = new SockJS('/your-endpoint');
-var stompClient = Stomp.over(socket);
-stompClient.connect({}, function (frame) {
-    stompClient.debug = null; // Disable debug logs
-    stompClient.subscribe('/topic/public', onMessageReceived);
-});
+var roomId = '10000'; // Default room
 
 var colors = [
     '#2196F3', '#32c787', '#00BCD4', '#ff5652',
@@ -29,10 +23,14 @@ var colors = [
 ];
 
 function connect(event) {
+    if (event.submitter.value !== 'start') {
+        return;
+    }
     loadingMsgs();
 
     username = document.querySelector('#name').value.trim();    
     const words = username.split(' ');
+
     // Check each word in the username for abuse
     let isAbusive = false;
     for (const word of words) {
@@ -47,7 +45,9 @@ function connect(event) {
             // Proceed if no abusive word was found (this will be handled after loop finishes)
             if (isAbusive === false && word === words[words.length - 1]) {
                 if(username) {
-                    localStorage.setItem('username', username);
+                    localStorage.setItem('userName', username);
+                    localStorage.setItem('roomName', '10000');
+                    roomId = '10000';
                     usernamePage.classList.add('hidden');
                     chatPage.classList.remove('hidden');
 
@@ -70,18 +70,28 @@ function connect(event) {
     event.preventDefault();
 }
 
-function onConnected(isReload = false) {
-    // Fetch previous chat messages from the server    
-    fetch('/chats')
-        .then(response => response.json())
+function onConnected(isReload = false, roomNumber = '10000', roomPassword = '10000') {
+    roomId = roomNumber; // Set the current room number
+
+    // Fetch previous chat messages from the server
+    fetch(`/rooms/${roomId}/messages?password=${roomPassword}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Invalid room or password");
+            }
+            return response.json();
+        })
         .then(messages => {
-            console.log("fetching megs", messages.length);
+            console.log(`Fetching messages for room ${roomId}:`, messages.length);
+            // Clear existing messages first
+            messageArea.innerHTML = '';
+
             // Loop through the previous messages and display them
             messages.forEach(message => {
                 var payload = {
                     body: JSON.stringify(message) // Convert the message object to a JSON string
                 };
-                onMessageReceived(payload)
+                onMessageReceived(payload);
             });
 
             // Send a "user joined" message only if it's not a reload
@@ -91,9 +101,10 @@ function onConnected(isReload = false) {
                     sender: username,
                     content: `${username} joined!`,
                     type: 'JOIN',
-                    timestamp: timestamp
+                    timestamp: timestamp,
+                    roomId: roomId
                 };
-                stompClient.send("/app/chat.addUser", {}, JSON.stringify(chatMessage));
+                stompClient.send(`/app/room/${roomId}/addUser`, {}, JSON.stringify(chatMessage));
             }
             setTimeout(() => {
               }, 10000); // 1000 milliseconds = 1 second
@@ -103,12 +114,11 @@ function onConnected(isReload = false) {
         })
         .catch(error => {
             console.log("Error fetching previous messages:", error);
+            connectingElement.classList.add('hidden');
         });
 
-
-    // Subscribe to the Public Topic
-    stompClient.subscribe('/topic/public', onMessageReceived);
-
+    // Subscribe to the room topic
+    stompClient.subscribe(`/topic/room/${roomId}`, onMessageReceived);
 }
 
 
@@ -116,7 +126,6 @@ function onError(error) {
     connectingElement.textContent = 'Could not connect to WebSocket server. Please refresh this page to try again!';
     connectingElement.style.color = 'red';
 }
-
 
 function sendMessage(event) {
     var messageContent = messageInput.value.trim();
@@ -126,9 +135,12 @@ function sendMessage(event) {
             sender: username,
             content: messageInput.value,
             type: 'CHAT',
-            timestamp : timestamp
+            timestamp: timestamp,
+            roomId: localStorage.getItem("roomName")
         };
-        stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(chatMessage));
+        console.log(`Sending message to room ${roomId}:`, chatMessage);
+        stompClient.send(`/app/room/${roomId}/sendMessage`, {}, JSON.stringify(chatMessage));
+//        stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(chatMessage));
         snowfall(messageInput.value.length);
         messageInput.value = '';
     }
@@ -170,14 +182,11 @@ function onMessageReceived(payload) {
     messageArea.scrollTop = messageArea.scrollHeight;
 }
 
-function loadingMsgs()
-{
+function loadingMsgs() {
     const randomIndex = Math.floor(Math.random() * loadingMsg.length);
     let message = loadingMsg[randomIndex];
     connectingElement.innerText = message;
-
 }
-
 
 function getAvatarColor(messageSender) {
     var hash = 0;
@@ -191,89 +200,101 @@ function getAvatarColor(messageSender) {
 function exitChat(event) {
     event.preventDefault();
     
-    var username = localStorage.getItem("username");
-    localStorage.removeItem('username'); // Clear the saved username
+    var savedUsername = localStorage.getItem("userName");
+    var roomName = localStorage.getItem("roomName");
+    localStorage.removeItem('userName');
+    localStorage.removeItem('roomName');
+
     var timestamp = new Date().getTime();
     var chatMessage = {
-        sender: username,
-        content: `${username} left!`,
+        sender: savedUsername,
+        content: `${savedUsername} left!`,
         type: 'LEAVE',
-        timestamp : timestamp
+        timestamp: timestamp,
+        roomId: roomName
     };
-    stompClient.send("/app/chat.leaveUser", {}, JSON.stringify(chatMessage));
     
     // Disconnect from WebSocket if connected
     if (stompClient) {
+        stompClient.send(`/app/room/${roomId}/leaveUser`, {}, JSON.stringify(chatMessage));
         stompClient.disconnect(() => {
             console.log('Disconnected from server');
         });
     }
-    // Clear chat messages from the chat page
-    var messageArea = document.getElementById("messageArea"); // Assuming the chat messages are inside an element with id "messageArea"
-    while (messageArea.firstChild) {
-        messageArea.removeChild(messageArea.firstChild);
-    }
     
-    usernamePage.classList.remove('hidden'); // Show the username page
-    chatPage.classList.add('hidden');       // Hide the chat page
+    // Clear chat messages
+    messageArea.innerHTML = '';
+
+    usernamePage.classList.remove('hidden');
+    chatPage.classList.add('hidden');
     connectingElement.classList.remove('hidden');
 }
 
-function createRoom() {
+function createRoom(event) {
+    event.preventDefault();
+
+    username = document.querySelector('#name').value.trim();
+    if (username === '') {
+        return;
+    }
+
     var roomName = prompt("Enter the name of the room:");
+    console.log("roomname", roomName);
+    if(roomName === null) {
+        return;
+    }
     if (roomName && roomName.trim() !== "") {
-        localStorage.setItem('room', roomName);
+        localStorage.setItem('userName', username);
+        localStorage.setItem('roomName', roomName);
         usernamePage.classList.add('hidden');
         chatPage.classList.remove('hidden');
 
         var socket = new SockJS('/ws');
         stompClient = Stomp.over(socket);
+        stompClient.debug = null;
 
         stompClient.connect({}, function () {
-            onRoomConnected(roomName);
+            onConnected(false, roomName, 'abcd');
         }, onError);
     } else {
         alert('Room name cannot be empty!');
+        return;
     }
-}
+};
 
-function onRoomConnected(roomName) {
-    stompClient.subscribe(`/topic/${roomName}`, onMessageReceived);
+function joinRoom(event) {
+    event.preventDefault();
+};
 
-    stompClient.send(`/app/chat.addUserToRoom`,
-        {},
-        JSON.stringify({ sender: username, room: roomName, type: 'JOIN' })
-    );
-
-    connectingElement.classList.add('hidden');
-}
-
-
-usernameForm.addEventListener('submit', connect, true)
-messageForm.addEventListener('submit', sendMessage, true)
-messageExit.addEventListener('click', exitChat, true)
+usernameForm.addEventListener('submit', connect, true);
+messageForm.addEventListener('submit', sendMessage, true);
+messageExit.addEventListener('click', exitChat, true);
 createRoomButton.addEventListener('click', createRoom);
 
 window.onload = function () {   
     loadingMsgs();
-    const savedUsername = localStorage.getItem('username');
+    const savedUsername = localStorage.getItem('userName');
+    const savedRoomName = localStorage.getItem('roomName');
+
     if (savedUsername) {
         username = savedUsername;
+        roomId = savedRoomName || '10000';
         usernamePage.classList.add('hidden');
         chatPage.classList.remove('hidden');
+
         var socket = new SockJS('/ws');
         stompClient = Stomp.over(socket);
         stompClient.debug = null;
-        stompClient.connect({}, () => onConnected(true), onError);
-        // stompClient.connect({}, onConnected, onError);
+        stompClient.connect({}, () => onConnected(true, roomId), onError);
     }
 };
 
 function snowfall(msgLen) {
-    const snowflakeCount = Math.min(msgLen*10,500); // Number of snowflakes
+    const snowflakeCount = Math.min(msgLen*10, 500); // Number of snowflakes
     // const snowflakeContainer = document.body;
     const snowflakeContainer = snowFall;
     snowflakeContainer.replaceChildren();
+
     for (let i = 0; i < snowflakeCount; i++) {
         const snowflake = document.createElement('div');
         snowflake.classList.add('snowflake');
