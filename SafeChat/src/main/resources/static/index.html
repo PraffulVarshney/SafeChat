@@ -1,167 +1,168 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, minimum-scale=1.0"
-    />
-    <meta charset="UTF-8" />
-    <title>Spring Boot WebSocket Chat Application</title>
-    <link rel="stylesheet" href="/css/main.css" />
-    <link rel="icon" href="favicon.ico" type="image/x-icon" />
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-  </head>
-  <body>
-    <noscript>
-      <h2>Sorry! Your browser doesn't support Javascript</h2>
-    </noscript>
-    <div class="snowflakes-container"></div>
-    <div id="username-page">
-      <div class="username-page-container">
-        <h1 class="title">Type your username to enter the Chatroom</h1>
-        <form id="usernameForm" name="usernameForm">
-          <div class="form-group">
-            <input
-                    type="text"
-                    id="name"
-                    placeholder="Username"
-                    autocomplete="off"
-                    class="form-control"
-                    required
-            />
-          </div>
-          <div class="form-group">
-            <button type="submit" name="action" value="start" class="accent username-submit">
-              Start Chatting
-            </button>
-          </div>
-          <div class="form-group">
-            <button type="submit" name="action" value="create" class="accent create-room">
-              Create Room
-            </button>
-          </div>
-          <div class="form-group">
-            <button type="submit" name="action" value="join" class="accent join-room">
-              Join Room
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <div id="chat-page" class="hidden">
-      <div class="chat-container">
-        <div class="chat-header">
-          <h2>Chat Room</h2>
-        </div>
-        <div id="exitForm">
-          <button type="submit" id="exit" class="secondary">Exit</button>
-        </div>
-        <div class="connecting">Connecting...</div>
-        <ul id="messageArea"></ul>
-        <form id="messageForm" name="messageForm">
-          <div class="form-group">
-            <div class="input-group clearfix">
-              <input
+<head>
+  <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0, minimum-scale=1.0"
+  />
+  <meta charset="UTF-8" />
+  <title>Spring Boot WebSocket Chat Application</title>
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<noscript>
+  <h2>Sorry! Your browser doesn't support Javascript</h2>
+</noscript>
+<div class="snowflakes-container"></div>
+<div id="username-page">
+  <div class="username-page-container">
+    <h1>Join the Conversation</h1>
+    <form id="usernameForm" name="usernameForm">
+      <div class="form-group">
+        <input
                 type="text"
-                id="message"
-                placeholder="Type a message..."
+                id="name"
+                placeholder="Enter your username"
                 autocomplete="off"
                 class="form-control"
-                maxlength="10000"
-              />
-              <button type="submit" class="primary">Send</button>
-            </div>
-          </div>
-        </form>
+                required
+        />
+      </div>
+      <div class="form-group">
+        <button type="submit" name="action" value="start" class="accent username-submit">
+          🚀 Start Chatting
+        </button>
+      </div>
+      <div class="form-group">
+        <button type="submit" name="action" value="create" class="accent create-room">
+          ✨ Create Room
+        </button>
+      </div>
+      <div class="form-group">
+        <button type="submit" name="action" value="join" class="accent join-room">
+          🌟 Join Room
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="chat-page" class="hidden">
+  <div class="chat-container">
+    <div class="chat-header">
+      <h2></h2>
+      <div id="exitForm">
+        <button type="submit" id="exit" class="secondary">✕ Exit</button>
       </div>
     </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.1.4/sockjs.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
-    <script type="module" src="/js/main.js"></script>
-    <style id="snow-style">
-      #snow {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        overflow: hidden;
-        z-index: 9;
-        pointer-events: none;
-        opacity: 0.5;
+    <div class="connecting">Connecting to the universe...</div>
+    <ul id="messageArea"></ul>
+    <form id="messageForm" name="messageForm">
+      <div class="form-group">
+        <div class="input-group clearfix">
+          <input
+                  type="text"
+                  id="message"
+                  placeholder="Type your message..."
+                  autocomplete="off"
+                  class="form-control"
+                  maxlength="10000"
+          />
+          <button type="submit" class="primary">Send 💫</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.1.4/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+<script type="module" src="/js/main.js"></script>
+<style id="snow-style">
+  #snow {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    z-index: 9;
+    pointer-events: none;
+    opacity: 0.5;
+  }
+  .snow {
+    display: block;
+    position: absolute;
+    width: 0.6rem;
+    height: 0.6rem;
+    background: white;
+    border-radius: 99px;
+  }
+</style>
+<section id="snow"></section>
+<script>
+  !(function () {
+    try {
+      for (
+        var t = document.getElementById("snow"),
+          n = document.getElementById("snow-style"),
+          e = 0;
+        e < 128;
+        e++
+      ) {
+        var a = 100 * w(),
+          s = 20 * w() - 10,
+          r = a + s,
+          o = a + s / 2,
+          l = 0.3 + w() / 2,
+          i = 100 * l,
+          c = w(),
+          m = 10 + 20 * w(),
+          d = -30 * w(),
+          f = document.createElement("i");
+        f.classList.add("snow"),
+          (f.style.cssText = [
+            "opacity:",
+            w(),
+            ";transform:translate(",
+            a,
+            "vw,-10px) scale(",
+            c,
+            ");animation:snow",
+            e,
+            " ",
+            m,
+            "s ",
+            d,
+            "s linear infinite",
+          ].join("")),
+          t.appendChild(f),
+          (n.innerHTML += [
+            "@keyframes  snow",
+            e,
+            "{",
+            100 * l,
+            "%{transform:translate(",
+            r,
+            "vw,",
+            i,
+            "vh) scale(",
+            c,
+            ")}100%{transform:translate(",
+            o,
+            "vw,100vh) scale(",
+            c,
+            ")}}",
+          ].join(""));
       }
-      .snow {
-        display: block;
-        position: absolute;
-        width: 0.6rem;
-        height: 0.6rem;
-        background: white;
-        border-radius: 99px;
-      }
-    </style>
-    <section id="snow"></section>
-    <script>
-      !(function () {
-        try {
-          for (
-            var t = document.getElementById("snow"),
-              n = document.getElementById("snow-style"),
-              e = 0;
-            e < 128;
-            e++
-          ) {
-            var a = 100 * w(),
-              s = 20 * w() - 10,
-              r = a + s,
-              o = a + s / 2,
-              l = 0.3 + w() / 2,
-              i = 100 * l,
-              c = w(),
-              m = 10 + 20 * w(),
-              d = -30 * w(),
-              f = document.createElement("i");
-            f.classList.add("snow"),
-              (f.style.cssText = [
-                "opacity:",
-                w(),
-                ";transform:translate(",
-                a,
-                "vw,-10px) scale(",
-                c,
-                ");animation:snow",
-                e,
-                " ",
-                m,
-                "s ",
-                d,
-                "s linear infinite",
-              ].join("")),
-              t.appendChild(f),
-              (n.innerHTML += [
-                "@keyframes  snow",
-                e,
-                "{",
-                100 * l,
-                "%{transform:translate(",
-                r,
-                "vw,",
-                i,
-                "vh) scale(",
-                c,
-                ")}100%{transform:translate(",
-                o,
-                "vw,100vh) scale(",
-                c,
-                ")}}",
-              ].join(""));
-          }
-        } catch (t) {}
-        function w() {
-          return Math.random();
-        }
-      })();
-    </script>
-  </body>
+    } catch (t) {}
+    function w() {
+      return Math.random();
+    }
+  })();
+</script>
+</body>
 </html>

@@ -23,7 +23,7 @@ public class FirebaseMessageService {
     private EncryptionUtil encryptionUtil;
 
     public FirebaseMessageService() {
-        this.databaseReference = FirebaseDatabase.getInstance().getReference("chats");
+        this.databaseReference = FirebaseDatabase.getInstance().getReference("chat_sy_test");
     }
 
     public void saveMessage(ChatMessage chatMessage) {
@@ -32,6 +32,7 @@ public class FirebaseMessageService {
         // dbMessage.setSender(encryptionUtil.encrypt(chatMessage.getSender()));
         dbMessage.setSender(chatMessage.getSender());
         dbMessage.setContent(encryptionUtil.encrypt(chatMessage.getContent())); // Encrypt only for Firebase
+//        dbMessage.setContent(chatMessage.getContent()); // Encrypt only for Firebase
         dbMessage.setTimestamp(chatMessage.getTimestamp());
         dbMessage.setType(chatMessage.getType());
         dbMessage.setRoomId(chatMessage.getRoomId());
@@ -44,7 +45,7 @@ public class FirebaseMessageService {
 
     public CompletableFuture<List<ChatMessage>> fetchMessages(String roomId) {
         CompletableFuture<List<ChatMessage>> future = new CompletableFuture<>();
-        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("chats");
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("chat_sy_test");
         long currentTimestamp = System.currentTimeMillis();
         long twentyFourHoursAgo = currentTimestamp - (24 * 60 * 60 * 1000 * 14);
         ref.orderByChild("roomId").equalTo(roomId)
@@ -58,6 +59,7 @@ public class FirebaseMessageService {
                                 // chatMessage.setSender(encryptionUtil.decrypt(chatMessage.getSender()));
                                 chatMessage.setSender(chatMessage.getSender());
                                 chatMessage.setContent(encryptionUtil.decrypt(chatMessage.getContent()));
+//                                chatMessage.setContent(chatMessage.getContent());
                                 chatMessages.add(chatMessage);
                             }
                         }
