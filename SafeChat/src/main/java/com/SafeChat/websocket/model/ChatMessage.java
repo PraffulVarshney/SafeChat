@@ -13,4 +13,5 @@ public class ChatMessage {
     private String content;
     private String sender;
     private long timestamp;
+    private String RoomId;
 }

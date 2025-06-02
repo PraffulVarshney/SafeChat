@@ -5,7 +5,7 @@
 • Implemented an abuse masking system using a trie data structure to detect and mask abusive words in chat messages efficiently. <br>
 • Integrated Firebase for secure user authentication and store encrypted chat. <br>
 
-You can try it here -> https://safe-chat-zzzf.onrender.com/
+You can try it here -> https://safechat-v1.onrender.com/
 
 Wait for some time; it may take a few seconds to load. (P.S. Use English/Hindi slangs only)
 
