@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="/css/main.css" />
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -78,6 +79,41 @@
   </div>
 </div>
 
+<div id="mainLoader" class="loader-overlay hidden">
+  <div class="loader"></div>
+  <p id="loaderText">Loading...</p>
+</div>
+
+<!-- Modal HTML -->
+<div id="roomModal" class="modal-overlay">
+  <div class="modal-content">
+    <h3 class="modal-title">Enter Room Details</h3>
+    <input type="text" id="roomIdInput" class="modal-input" placeholder="Room ID">
+    <div id="roomIdError" class="error-message hidden"></div>
+
+    <input type="password" id="roomPasswordInput" class="modal-input" placeholder="Room Password">
+    <div id="roomPasswordError" class="error-message hidden"></div>
+
+    <div class="modal-buttons">
+      <button class="modal-btn modal-btn-cancel" id="cancelBtn">Cancel</button>
+      <button class="modal-btn modal-btn-confirm" id="confirmBtn">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- Single Input Modal -->
+<div id="inputModal" class="modal-overlay">
+  <div class="modal-content">
+    <h3 class="modal-title" id="inputModalTitle">Enter Value</h3>
+    <input type="text" id="singleInput" class="modal-input" placeholder="">
+    <div id="singleInputError" class="error-message hidden"></div>
+
+    <div class="modal-buttons">
+      <button class="modal-btn modal-btn-cancel" id="inputCancelBtn">Cancel</button>
+      <button class="modal-btn modal-btn-confirm" id="inputConfirmBtn">OK</button>
+    </div>
+  </div>
+</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.1.4/sockjs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
 <script type="module" src="/js/main.js"></script>
@@ -103,6 +139,7 @@
   }
 </style>
 <section id="snow"></section>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 <script>
   !(function () {
     try {

@@ -31,7 +31,7 @@ public class FirebaseRoomService {
             // Default to 1000 if no counter exists yet
             long currentValue = snapshot.exists() && snapshot.contains("value")
                     ? snapshot.getLong("value")
-                    : 10000;
+                    : 1000;
             long newRoomId = currentValue + 1;
 
             // Create or update counter value
@@ -65,7 +65,7 @@ public class FirebaseRoomService {
 
     public Boolean validateRoomPassword(String roomId, String password){
 //        for global room
-        if (roomId.equals("10000")) {
+        if (roomId.equals("1000")) {
             return true;
         }
 
